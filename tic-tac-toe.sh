@@ -10,7 +10,7 @@ function is_field_empty () {
     # Check if the field is empty
     desired_field=${1}
     status_code=0
-    
+
     for entry in ${HISTORY[@]};
     do
         if [[ ${desired_field} == ${entry} ]]; then
@@ -34,7 +34,7 @@ function move () {
         result=$?
     done
 
-    # Append the move to current player's and global history 
+    # Append the move to current player's and global history
     if [[ ${TURN} == 'O' ]]; then
         HISTORY+=("${field}")
     else
@@ -47,7 +47,7 @@ function end_turn () {
     case ${TURN} in
         'O') TURN='X' ;;
         'X') TURN='O' ;;
-    esac 
+    esac
 }
 
 function draw () {
@@ -55,19 +55,19 @@ function draw () {
     for f in ${FIELDS[@]};
     do
         is_empty=1
-        # Check fields against move history 
+        # Check fields against move history
         for i in ${!HISTORY[@]};
         do
             if [ ${HISTORY[$i]} -eq "${f}" ]; then
-                if [ $((i % 2)) -eq 0 ]; then
+                if (( i % 2 == 0 )); then
                     printf "O "
                     is_empty=0
-                    break 
+                    break
                 else
                     printf "X "
                     is_empty=0
                     break
-                fi            
+                fi
             fi
         done
         if [ ${is_empty} -eq 1 ]; then
@@ -80,28 +80,58 @@ function draw () {
     done
 }
 
-function check_win () {
-    player=${1}
+function find_winner() {
+    for win in "${WINS[@]}";
+    do
+        echo ${win}
+        for position in win;
+        do
+            echo ${1} | grep position
+        # if [ ${?} != 0 ]; then
+        #     break
+        # fi
+        done
+    done
+    echo ""
+    # for i in ${1};
+    # do
+    #     echo ${i}
+    # done
+}
 
-    # HAVE TO PARSE HISTORY HERE SOMEWHERE TO DETERMINE IF ITS GOT THE WINNING POSITIONS
+function check_win() {
+    echo "Current player: ${TURN}"
+    player_history=()
+
+    printf "%s: {" ${TURN}
+    if [[ "${TURN}" == "O" ]]; then
+        rest=0
+    else
+        rest=1
+    fi
 
     for i in ${!HISTORY[@]};
     do
-        if [ $((i % 2)) -eq 0 ]; then
-            echo "Sth"
+        if (( i % 2 == rest )); then
+            printf "%d, " ${HISTORY[$i]}
+            player_history+=("${HISTORY[$i]}")
         fi
     done
+    echo "}"
+
+    find_winner ${player_history}
 }
 
 function main () {
     # Game's primitive event loop
-    for _ in {1..9};
+    for i in {1..9};
     do
-        move 
+        move
         draw
-        end_turn
         check_win
+        end_turn
     done
 }
 
-main
+# main
+find_winner
