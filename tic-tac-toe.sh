@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Save file name
+SAVE="auto.save"
 # GLOBAL VARIABLES
 FIELDS=(1 2 3 4 5 6 7 8 9)
 HISTORY=()
@@ -40,6 +42,11 @@ function move () {
     do
         printf "[%d] %s's turn [1-9]: " ${#HISTORY[@]} ${TURN}
         read field
+        while [[ ! $field =~ ^[1-9]$ ]];
+        do
+            echo "Please select a number out of [1-9]"
+            read field
+        done
         is_field_empty ${field}
         result=$?
     done
@@ -64,10 +71,10 @@ function move () {
         if (( field == 3 || field == 5 || field == 7 )); then
             O_OPPOSITE_DIAGONAL[${opposite_diagonal_index}]=1
         fi
-        echo "O_ROWS: [${O_ROWS[@]}]"
-        echo "O_COLUMNS: [${O_COLUMNS[@]}]"
-        echo "O_DIAGONAL: [${O_DIAGONAL[@]}]"
-        echo "O_OPPOSITE_DIAGONAL: [${O_OPPOSITE_DIAGONAL[@]}]"
+        # echo "O_ROWS: [${O_ROWS[@]}]"
+        # echo "O_COLUMNS: [${O_COLUMNS[@]}]"
+        # echo "O_DIAGONAL: [${O_DIAGONAL[@]}]"
+        # echo "O_OPPOSITE_DIAGONAL: [${O_OPPOSITE_DIAGONAL[@]}]"
     else
         X_ROWS[${which_row}]=$(( X_ROWS[which_row] + 1 ))
         X_COLUMNS[${which_column}]=$(( X_COLUMNS[which_column] + 1 ))
@@ -79,10 +86,10 @@ function move () {
         if (( field == 3 || field == 5 || field == 7 )); then
             X_OPPOSITE_DIAGONAL[${opposite_diagonal_index}]=1
         fi
-        echo "X_ROWS: [${X_ROWS[@]}]"
-        echo "X_COLUMNS: [${X_COLUMNS[@]}]"
-        echo "X_DIAGONAL: [${X_DIAGONAL[@]}]"
-        echo "X_OPPOSITE_DIAGONAL: [${X_OPPOSITE_DIAGONAL[@]}]"
+        # echo "X_ROWS: [${X_ROWS[@]}]"
+        # echo "X_COLUMNS: [${X_COLUMNS[@]}]"
+        # echo "X_DIAGONAL: [${X_DIAGONAL[@]}]"
+        # echo "X_OPPOSITE_DIAGONAL: [${X_OPPOSITE_DIAGONAL[@]}]"
     fi
 }
 
@@ -181,7 +188,6 @@ function check_win() {
         do
             aggregate=$(( aggregate + value ))
         done
-        echo "aggregate: ${aggregate}"
         if (( aggregate == 3 )); then
             return 1
         fi
@@ -191,7 +197,6 @@ function check_win() {
         do
             aggregate=$(( aggregate + value ))
         done
-        echo "aggregate: ${aggregate}"
         if (( aggregate == 3 )); then
             return 1
         fi
@@ -200,22 +205,52 @@ function check_win() {
     return 0
 }
 
+function autosave () {
+    # Save all tracked game variables to a save file
+    echo "TURN=${TURN}" > ${SAVE}
+    echo "HISTORY=(${HISTORY[@]})" >> ${SAVE}
+    echo "O_ROWS=(${O_ROWS[@]})" >> ${SAVE}
+    echo "O_COLUMNS=(${O_COLUMNS[@]})" >> ${SAVE}
+    echo "O_DIAGONAL=(${O_DIAGONAL[@]})" >> ${SAVE}
+    echo "O_OPPOSITE_DIAGONAL=(${O_OPPOSITE_DIAGONAL[@]})" >> ${SAVE}
+    echo "X_ROWS=(${X_ROWS[@]})" >> ${SAVE}
+    echo "X_COLUMNS=(${X_COLUMNS[@]})" >> ${SAVE}
+    echo "X_DIAGONAL=(${X_DIAGONAL[@]})" >> ${SAVE}
+    echo "X_OPPOSITE_DIAGONAL=(${X_OPPOSITE_DIAGONAL[@]})" >> ${SAVE}
+}
+
 function main () {
+    if [ -f "${SAVE}" ]; then
+        read -p "Load game from ${SAVE}? (y/[n])" -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]
+        then
+            source ${SAVE}
+        fi
+    fi
+    # Show the board before the first move
+    draw
     # Game's primitive event loop
-    for i in {1..9};
+    while true;
     do
+        if [ ${#HISTORY[@]} -gt 8 ]; then
+            echo "All fields are taken!"
+            break
+        fi
         move
         draw
         check_win
         winner=${?}
         if (( winner == 1 )); then
             echo "Player ${TURN} WON!"
-            # Delete the save file here?
-            exit 0
+            return 0
         fi
         end_turn
+        autosave
     done
     echo "NOBODY won this round!"
 }
 
 main
+# If game is finished remove the save file
+rm ./auto.save
