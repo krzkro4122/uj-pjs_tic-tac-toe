@@ -42,7 +42,7 @@ function move () {
 	result=1
 	while [ ${result} -eq 1 ];
 	do
-		printf "[%d] %s's turn [1-9]: \n" ${#HISTORY[@]} ${TURN}
+		printf "[%d] %s's turn [1-9]: " ${#HISTORY[@]} ${TURN}
 		if [[ ${AI} == 0 || ${TURN} == 'O' ]]; then
 			read field
 			while [[ ! $field =~ ^[1-9]$ ]];
@@ -57,16 +57,10 @@ function move () {
 				field=${AI_OPTIONS[$index]}
 			fi
 		fi
+
 		# Check field's emptyness
 		is_field_empty ${field}
 		result=$?
-		echo "result: ${result}"
-		echo "AI_OPTIONS: ${AI_OPTIONS[@]}"
-		echo "index: ${index}"
-		echo "field: ${field}"
-		echo "opt_num: ${opt_num}"
-		echo ""
-		echo ""
 
 		if [[ ${result} == 1 ]] && [[ ${AI} == 0 || "${TURN}" == "O" ]]; then
 			printf "Field %s is already in use!\n" ${desired_field}
@@ -99,10 +93,6 @@ function move () {
 		if (( field == 3 || field == 5 || field == 7 )); then
 			O_OPPOSITE_DIAGONAL[${opposite_diagonal_index}]=1
 		fi
-		# echo "O_ROWS: [${O_ROWS[@]}]"
-		# echo "O_COLUMNS: [${O_COLUMNS[@]}]"
-		# echo "O_DIAGONAL: [${O_DIAGONAL[@]}]"
-		# echo "O_OPPOSITE_DIAGONAL: [${O_OPPOSITE_DIAGONAL[@]}]"
 	else
 		X_ROWS[${which_row}]=$(( X_ROWS[which_row] + 1 ))
 		X_COLUMNS[${which_column}]=$(( X_COLUMNS[which_column] + 1 ))
@@ -114,10 +104,6 @@ function move () {
 		if (( field == 3 || field == 5 || field == 7 )); then
 			X_OPPOSITE_DIAGONAL[${opposite_diagonal_index}]=1
 		fi
-		# echo "X_ROWS: [${X_ROWS[@]}]"
-		# echo "X_COLUMNS: [${X_COLUMNS[@]}]"
-		# echo "X_DIAGONAL: [${X_DIAGONAL[@]}]"
-		# echo "X_OPPOSITE_DIAGONAL: [${X_OPPOSITE_DIAGONAL[@]}]"
 	fi
 }
 
